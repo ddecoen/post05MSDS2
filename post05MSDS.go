@@ -13,7 +13,7 @@ import (
 var (
 	Hostname2 = ""
 	Port2     = 2345
-	Username2 = ""
+	Username = ""
 	Password2 = ""
 	Database2 = ""
 )
@@ -22,7 +22,7 @@ var (
 // MSDSCourseCatalog table + MSDS
 type MSDSCourseCatalog struct {
 	ID          int 
-	Username2    string
+	Username    string
 	CID         string `json:"couseI_D"`
 	CNAME	    string `json:"course_name"`
 	CPREREQ     string `json:"prerequisite"`
@@ -43,8 +43,8 @@ func openConnection2() (*sql.DB, error) {
 
 // The function returns the User ID of the username
 // -1 if the User does not exist
-func exists2(username2 string) int {
-	username2 = strings.ToLower(username2)
+func exists2(username string) int {
+	username = strings.ToLower(username)
 
 	db2, err := openConnection2()
 	if err != nil {
@@ -54,7 +54,7 @@ func exists2(username2 string) int {
 	defer db2.Close()
 
 	userID := -1
-	statement := fmt.Sprintf(`SELECT "id" FROM "MSDS" where Username = '%s'`, username2)
+	statement := fmt.Sprintf(`SELECT "id" FROM "MSDS" where Username = '%s'`, username)
 	rows, err := db2.Query(statement)
 
 	for rows.Next() {
@@ -74,7 +74,7 @@ func exists2(username2 string) int {
 // Returns new User ID
 // -1 if there was an error
 func AddUser2(d MSDSCourseCatalog) int {
-	d.Username2 = strings.ToLower(d.Username2)
+	d.Username = strings.ToLower(d.Username)
 
 	db2, err := openConnection2()
 	if err != nil {
@@ -83,14 +83,14 @@ func AddUser2(d MSDSCourseCatalog) int {
 	}
 	defer db2.Close()
 
-	userID := exists2(d.Username2)
+	userID := exists2(d.Username)
 	if userID != -1 {
-		fmt.Println("User already exists:", Username2)
+		fmt.Println("User already exists:", Username)
 		return -1
 	}
 
-	insertStatement := `insert into "MSDS" ("Username2") values ($1)`
-	_, err = db2.Exec(insertStatement, d.Username2)
+	insertStatement := `insert into "MSDS" ("Username") values ($1)`
+	_, err = db2.Exec(insertStatement, d.Username)
 	if err != nil {
 		fmt.Println(err)
 		return -1
@@ -124,16 +124,16 @@ func DeleteUser2(id int) error {
 	statement := fmt.Sprintf(`SELECT "Username" FROM "MSDS" where id = %d`, id)
 	rows, err := db2.Query(statement)
 
-	var username2 string
+	var username string
 	for rows.Next() {
-		err = rows.Scan(&username2)
+		err = rows.Scan(&username)
 		if err != nil {
 			return err
 		}
 	}
 	defer rows.Close()
 
-	if exists2(username2) != id {
+	if exists2(username) != id {
 		return fmt.Errorf("User with ID %d does not exist", id)
 	}
 
@@ -172,12 +172,12 @@ func ListUsers2() ([]MSDSCourseCatalog, error) {
 
 	for rows.Next() {
 		var id int
-		var username2 string
+		var username string
 		var cid string
 		var cname string
 		var cprereq string
-		err = rows.Scan(&id, &username2, &cid, &cname, &cprereq)
-		temp := MSDSCourseCatalog{ID: id, Username2: username2, CID: cid, CNAME: cname, CPREREQ: cprereq}
+		err = rows.Scan(&id, &username, &cid, &cname, &cprereq)
+		temp := MSDSCourseCatalog{ID: id, Username: username, CID: cid, CNAME: cname, CPREREQ: cprereq}
 		Data = append(Data, temp)
 		if err != nil {
 			return Data, err
@@ -195,7 +195,7 @@ func UpdateUser2(d MSDSCourseCatalog) error {
 	}
 	defer db2.Close()
 
-	userID := exists2(d.Username2)
+	userID := exists2(d.Username)
 	if userID == -1 {
 		return errors.New("User does not exist")
 	}
